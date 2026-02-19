@@ -1,0 +1,9 @@
+{
+  "id": "grain-sync",
+  "name": "Grain Sync",
+  "version": "0.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Sync Grain meeting transcripts to your vault",
+  "author": "Dominic Chapman",
+  "isDesktopOnly": false
+}
