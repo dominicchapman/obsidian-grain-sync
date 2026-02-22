@@ -6,6 +6,7 @@ import {
 } from "./settings";
 import { fetchRecordings, fetchRecordingDetail, fetchTranscript } from "./grain";
 import { buildNote, buildPersonNote, toFilename } from "./note";
+import { computeAfterDatetime } from "./sync";
 
 export default class GrainSync extends Plugin {
   settings!: GrainSyncSettings;
@@ -67,12 +68,13 @@ export default class GrainSync extends Plugin {
     }
 
     let synced = 0;
+    let skipped = 0;
     const total = recordings.length;
     const peopleToCreate = new Set<string>();
     const today = new Date().toISOString().split("T")[0];
 
     for (const recording of recordings) {
-      this.setStatus(`Grain Sync: ${synced + 1}/${total}`);
+      this.setStatus(`Grain Sync: ${synced + skipped + 1}/${total}`);
 
       try {
         const existing = this.settings.knownRecordings[recording.id];
@@ -81,10 +83,14 @@ export default class GrainSync extends Plugin {
         if (existing) {
           const file = this.app.vault.getFileByPath(normalizePath(existing));
           if (file) {
+            if (!recording.updated_at) {
+              skipped++;
+              continue;
+            }
             const cache = this.app.metadataCache.getFileCache(file);
             const localUpdated = cache?.frontmatter?.updated as string | undefined;
-            if (localUpdated && recording.updated_at && recording.updated_at <= localUpdated) {
-              synced++;
+            if (localUpdated && recording.updated_at <= localUpdated) {
+              skipped++;
               continue;
             }
           }
@@ -138,20 +144,7 @@ export default class GrainSync extends Plugin {
 
     this.settings.lastSyncedAt = new Date().toISOString();
     await this.saveSettings();
-    new Notice(`Grain Sync: Synced ${synced} recording${synced === 1 ? "" : "s"}.`);
+    new Notice(`Grain Sync: Synced ${synced} new, ${skipped} unchanged.`);
     this.setStatus("");
   }
-}
-
-function computeAfterDatetime(daysBack: number, lastSyncedAt: string | null): string {
-  const daysBackDate = new Date();
-  daysBackDate.setHours(0, 0, 0, 0);
-  if (daysBack > 0) {
-    daysBackDate.setDate(daysBackDate.getDate() - daysBack);
-  }
-
-  if (!lastSyncedAt) return daysBackDate.toISOString();
-
-  const lastSync = new Date(lastSyncedAt);
-  return lastSync < daysBackDate ? lastSync.toISOString() : daysBackDate.toISOString();
 }

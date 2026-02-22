@@ -30,5 +30,6 @@ bun run dev       # build with watch
 bun run test      # run tests
 bun run typecheck # type-check without emitting
 bun run lint      # lint with oxlint
+bun run deploy    # build and copy main.js to all vaults with the plugin installed
 ```
 
