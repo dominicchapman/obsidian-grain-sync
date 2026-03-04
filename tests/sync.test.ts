@@ -21,20 +21,13 @@ describe("computeAfterDatetime", () => {
     });
   });
 
-  it("uses lastSyncedAt when it is more recent than daysBack", () => {
+  it("uses lastSyncedAt when it exists, ignoring daysBack", () => {
     withFakeTime(() => {
       const twoHoursAgo = "2025-02-20T12:00:00Z";
-      const result = computeAfterDatetime(7, twoHoursAgo);
-      expect(result).toBe(new Date(twoHoursAgo).toISOString());
-    });
-  });
+      expect(computeAfterDatetime(7, twoHoursAgo)).toBe(twoHoursAgo);
 
-  it("uses daysBack when lastSyncedAt is older", () => {
-    withFakeTime(() => {
       const tenDaysAgo = "2025-02-10T10:00:00Z";
-      const result = computeAfterDatetime(7, tenDaysAgo);
-      const expected = new Date("2025-02-13T00:00:00.000Z").toISOString();
-      expect(result).toBe(expected);
+      expect(computeAfterDatetime(7, tenDaysAgo)).toBe(tenDaysAgo);
     });
   });
 
